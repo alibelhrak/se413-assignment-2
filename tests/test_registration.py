@@ -36,3 +36,38 @@ def test_enroll_allowed_executes_success_path(notifier):
 def test_enroll_rejected_executes_rejection_path(notifier):
     """Prerequisite not met executes lines 110, 116-117."""
     assert enroll_student(10, 3, False, notifier) is False
+
+
+# ---------------------------------------------------------------------------
+# Section 4(b): branch coverage
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+@pytest.mark.boundary
+def test_batch_empty_list_skips_loop():
+    """Empty batch: the for loop (line 83) is never entered (83->89).
+
+    Both accumulators keep their initial values.
+    """
+    assert summarize_batch_registrations([]) == (0, 0.0)
+
+
+@pytest.mark.unit
+@pytest.mark.negative
+def test_batch_all_requests_rejected():
+    """Every request rejected: the if on line 84 is only False (84->83).
+
+    (16, 3, True) fails the current-credits range; (10, 3, False) fails
+    the prerequisite. Neither contributes to the count or the fees.
+    """
+    assert summarize_batch_registrations([(16, 3, True), (10, 3, False)]) == (0, 0.0)
+
+
+@pytest.mark.unit
+@pytest.mark.positive
+def test_batch_mixed_approved_and_rejected():
+    """Both outcomes of line 84 in one batch: True (84->85) then False (84->83).
+
+    Only the approved request (10, 3, True) adds its fee of 1275.0.
+    """
+    assert summarize_batch_registrations([(10, 3, True), (10, 3, False)]) == (1, 1275.0)
