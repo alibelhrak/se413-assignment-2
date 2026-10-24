@@ -1,23 +1,38 @@
 """Test suite for src/registration.py (Assignment 2).
 
-This file is intentionally left for you to implement. See the assignment
-handout for the required work:
-
-  - Section 4: Statement and branch coverage (summarize_batch_registrations,
-    enroll_student) -- close every gap your coverage report shows.
-  - Section 5: Data-flow testing (defs/uses/DU pairs for `total_fees` in
-    summarize_batch_registrations; All-Uses coverage).
-  - Section 6: Test doubles (stub/mock notifier for enroll_student).
-
-`registration` is importable directly (see pyproject.toml's `pythonpath`
-setting), e.g.:
-
-    from registration import (
-        can_register,
-        calculate_registration_fee,
-        summarize_batch_registrations,
-        enroll_student,
-    )
+Targets summarize_batch_registrations() (lines 62-89) and
+enroll_student() (lines 92-117).
 """
 
-# TODO: implement your tests here.
+import pytest
+
+from registration import enroll_student, summarize_batch_registrations
+
+
+# ---------------------------------------------------------------------------
+# Section 4(a): statement coverage
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+@pytest.mark.positive
+def test_batch_single_approved_request():
+    """One approved request executes lines 80-87 and 89.
+
+    (10, 3, True): can_register -> True, total credits 13,
+    fee = 12*100 + 1*75 = 1275.0.
+    """
+    assert summarize_batch_registrations([(10, 3, True)]) == (1, 1275.0)
+
+
+@pytest.mark.unit
+@pytest.mark.positive
+def test_enroll_allowed_executes_success_path(notifier):
+    """Allowed request executes lines 110-114."""
+    assert enroll_student(10, 3, True, notifier) is True
+
+
+@pytest.mark.unit
+@pytest.mark.negative
+def test_enroll_rejected_executes_rejection_path(notifier):
+    """Prerequisite not met executes lines 110, 116-117."""
+    assert enroll_student(10, 3, False, notifier) is False
