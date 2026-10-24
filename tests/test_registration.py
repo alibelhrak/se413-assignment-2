@@ -96,3 +96,41 @@ def test_batch_total_fees_loop_carried_du_pair():
 
     assert approved_count == 2
     assert total_fees == 1275.0 + 1200.0  # 2475.0
+    
+    
+
+
+# ---------------------------------------------------------------------------
+# Section 6: test doubles for the notifier collaborator
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+@pytest.mark.positive
+def test_enroll_allowed_sends_confirmation_with_fee(notifier):
+    """Allowed case: state verification + behavior verification on the Mock.
+
+    (10, 3, True): can_register -> True, total 13 credits,
+    fee = 12*100 + 1*75 = 1275.0.
+    """
+    result = enroll_student(10, 3, True, notifier)
+
+    # State verification: the function's own observable output.
+    assert result is True
+
+    # Behavior verification: how enroll_student talked to its collaborator.
+    notifier.send_confirmation.assert_called_once_with(1275.0)
+    notifier.send_rejection.assert_not_called()
+
+
+@pytest.mark.unit
+@pytest.mark.negative
+def test_enroll_rejected_sends_rejection_without_arguments(notifier):
+    """Rejected case (prerequisite not met): state + behavior verification."""
+    result = enroll_student(10, 3, False, notifier)
+
+    # State verification
+    assert result is False
+
+    # Behavior verification
+    notifier.send_rejection.assert_called_once_with()
+    notifier.send_confirmation.assert_not_called()
