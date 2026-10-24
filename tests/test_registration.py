@@ -71,3 +71,28 @@ def test_batch_mixed_approved_and_rejected():
     Only the approved request (10, 3, True) adds its fee of 1275.0.
     """
     assert summarize_batch_registrations([(10, 3, True), (10, 3, False)]) == (1, 1275.0)
+
+# ---------------------------------------------------------------------------
+# Section 5(c): data-flow testing -- loop-carried DU pair of total_fees
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+@pytest.mark.positive
+def test_batch_total_fees_loop_carried_du_pair():
+    """Exercises the loop-carried DU pair (def @ line 87, use @ line 87).
+
+    Iteration 1 approves (10, 3, True): total 13 credits, fee 1275.0, and
+    line 87 defines total_fees = 0.0 + 1275.0.
+    Iteration 2 approves (10, 2, True): total 12 credits, fee 1200.0, and
+    line 87 reads the total_fees defined on iteration 1:
+    total_fees = 1275.0 + 1200.0 = 2475.0.
+
+    A version of line 87 that overwrote instead of accumulating would
+    return 1200.0 here, but would still pass every single-approval test.
+    """
+    approved_count, total_fees = summarize_batch_registrations(
+        [(10, 3, True), (10, 2, True)]
+    )
+
+    assert approved_count == 2
+    assert total_fees == 1275.0 + 1200.0  # 2475.0
